@@ -8,9 +8,9 @@ function Toast() {
       containerStyle={{ top: 100 }}
       toastOptions={{
         style: {
-          border: "1px solid darksteelblue",
+          border: "2px solid #ca1277",
           padding: "12px",
-          color: "darksteelblue",
+          color: "#ca1277",
         },
       }}
     />

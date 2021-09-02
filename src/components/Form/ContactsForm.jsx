@@ -1,44 +1,29 @@
+import { useDispatch, useSelector } from "react-redux";
 import { nanoid } from "nanoid";
-import { Formik, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
-import "yup-phone";
+import { Formik, ErrorMessage } from "formik";
+import { addContactValidationSchema } from "utils/YupValidationSchemes";
+import { addContact, getFiltredContactsList } from "redux/contacts";
 import {
-  FormWrapper,
-  Label,
+  FormStyled,
+  FieldStyled,
   Button,
+  Label,
   ValidationMessage,
-} from "./ContactsForm.styled";
-import { useAddContactMutation, contactAPI } from "services/contactAPI";
+} from "styles/common.styled";
 import toast from "react-hot-toast";
 
-const validationSchema = Yup.object().shape({
-  name: Yup.string()
-    .min(2, "Too Short!")
-    .max(50, "Too Long!")
-    .required("Required"),
-  number: Yup.string().phone(
-    "+38",
-    true,
-    "Valid number type +38 (XXX) XXX-XX-XX"
-  ),
-});
-
 function ContactsForm() {
-  const { data } = contactAPI.endpoints.fetchContacts.useQueryState(null, {});
-  const [addContact] = useAddContactMutation();
+  const contacts = useSelector(getFiltredContactsList);
+  const dispatch = useDispatch();
 
-  const handleAddContactOnSubmit = async (newContact) => {
-    if (data?.some(({ name }) => name === newContact.name)) {
+  const handleAddContactOnSubmit = (newContact) => {
+    if (contacts.some(({ name }) => name === newContact.name)) {
       toast.error(`Contact ${newContact.name} already exists`);
       return;
     }
 
-    try {
-      await addContact(newContact);
-      toast.success(`Contact ${newContact.name} created`);
-    } catch (error) {
-      toast.error(error);
-    }
+    dispatch(addContact(newContact));
+    toast.success(`Contact ${newContact.name} created`);
   };
 
   let nameInputId = nanoid(3);
@@ -47,16 +32,16 @@ function ContactsForm() {
   return (
     <Formik
       initialValues={{ name: "", number: "" }}
-      validationSchema={validationSchema}
+      validationSchema={addContactValidationSchema}
       onSubmit={(values, { resetForm }) => {
         const { name, number } = values;
         handleAddContactOnSubmit({ name, number });
         resetForm();
       }}
     >
-      <FormWrapper>
+      <FormStyled autoComplete="off">
         <Label htmlFor={`id-${nameInputId}`}>Name</Label>
-        <Field
+        <FieldStyled
           id={`id-${nameInputId}`}
           type="text"
           name="name"
@@ -65,7 +50,7 @@ function ContactsForm() {
         <ErrorMessage name="name" component={ValidationMessage} />
 
         <Label htmlFor={`id-${phoneInputId}`}>Number</Label>
-        <Field
+        <FieldStyled
           id={`id-${phoneInputId}`}
           type="tel"
           name="number"
@@ -74,7 +59,7 @@ function ContactsForm() {
         <ErrorMessage name="number" component={ValidationMessage} />
 
         <Button type="submit">Add contact</Button>
-      </FormWrapper>
+      </FormStyled>
     </Formik>
   );
 }
